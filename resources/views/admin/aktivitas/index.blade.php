@@ -45,6 +45,24 @@
         min-width: 230px;
         color: #64748b;
     }
+
+    /* PERBAIKAN UKURAN ICON PAGINATION */
+    .activity-pagination svg {
+        width: 16px !important;
+        height: 16px !important;
+        max-width: 16px !important;
+        max-height: 16px !important;
+        display: inline-block;
+    }
+
+    /* Mencegah SVG melebar */
+    .activity-pagination {
+        overflow-x: auto;
+    }
+
+    .activity-pagination svg {
+        flex-shrink: 0;
+    }
 </style>
 
 <!-- JUDUL HALAMAN -->
@@ -347,7 +365,7 @@
         </div>
 
         <!-- PAGINATION -->
-        <div class="mt-3">
+        <div class="mt-3 activity-pagination">
             {{ $aktivitas->links() }}
         </div>
 
