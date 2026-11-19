@@ -1,3 +1,4 @@
+
 @extends('layouts.petugas')
 
 @section('title', 'Pengembalian Alat')
@@ -42,6 +43,7 @@
         padding: 22px;
         border-radius: 10px;
         box-shadow: 0 3px 12px rgba(0,0,0,.04);
+        margin-bottom: 20px;
     }
 
     .table-wrap {
@@ -50,7 +52,7 @@
 
     table {
         width: 100%;
-        min-width: 850px;
+        min-width: 1100px;
         border-collapse: collapse;
     }
 
@@ -97,21 +99,54 @@
         background: #116b3c;
     }
 
+    .btn-primary {
+        background: #2563eb;
+    }
+
+    .btn-secondary {
+        background: #64748b;
+        text-decoration: none;
+        display: inline-block;
+    }
+
     .empty {
         text-align: center;
         padding: 30px;
         color: #8792a2;
     }
 
+    .denda {
+        font-weight: bold;
+        color: #dc3545;
+    }
+
+    .tepat-waktu {
+        color: #16834b;
+        font-weight: bold;
+    }
+
     small {
         color: #788598;
+    }
+
+    .filter-date {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 12px;
+    }
+
+    .filter-date input {
+        padding: 10px;
+        border: 1px solid #dce2ea;
+        border-radius: 6px;
     }
 </style>
 
 <div class="heading">
     <h2>Daftar Pengajuan Pengembalian</h2>
     <p>
-        Periksa kondisi alat sebelum menyelesaikan pengembalian.
+        Periksa kondisi alat dan estimasi denda sebelum menyelesaikan pengembalian.
     </p>
 </div>
 
@@ -135,6 +170,59 @@
     </div>
 @endif
 
+{{-- KALENDER SIMULASI DENDA --}}
+<div class="card">
+    <h4 style="margin-bottom: 8px;">
+        Pemeriksaan / Simulasi Denda
+    </h4>
+
+    <p style="color:#788598; font-size:13px;">
+        Pilih tanggal untuk mengetahui berapa denda yang seharusnya dikenakan.
+        Fitur ini hanya untuk pengecekan dan tidak mengubah tanggal sistem.
+    </p>
+
+    <form
+        action="{{ route('petugas.pengembalian.index') }}"
+        method="GET"
+        class="filter-date"
+    >
+        <div>
+            <label for="tanggal_cek"
+                   style="display:block; margin-bottom:6px; font-size:13px;">
+                Tanggal pemeriksaan
+            </label>
+
+            <input
+                type="date"
+                id="tanggal_cek"
+                name="tanggal_cek"
+                value="{{ $tanggalCek }}"
+                required
+            >
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Cek Denda
+        </button>
+
+        <a
+            href="{{ route('petugas.pengembalian.index') }}"
+            class="btn btn-secondary"
+        >
+            Tanggal Hari Ini
+        </a>
+    </form>
+
+    <p style="margin-top:12px; font-size:12px; color:#64748b;">
+        Tanggal yang sedang digunakan:
+        <strong>
+            {{ \Carbon\Carbon::parse($tanggalCek)->translatedFormat('d F Y') }}
+        </strong>
+        (WIB)
+    </p>
+</div>
+
+{{-- TABEL PENGEMBALIAN --}}
 <div class="card">
     <div class="table-wrap">
         <table>
@@ -144,6 +232,8 @@
                     <th>Nama Pengguna</th>
                     <th>Alat yang Dikembalikan</th>
                     <th>Batas Pengembalian</th>
+                    <th>Keterlambatan</th>
+                    <th>Estimasi Denda</th>
                     <th>Proses Pengembalian</th>
                 </tr>
             </thead>
@@ -180,6 +270,30 @@
                         </td>
 
                         <td>
+                            @if($peminjaman->hari_terlambat > 0)
+                                <span class="denda">
+                                    {{ $peminjaman->hari_terlambat }} hari
+                                </span>
+                            @else
+                                <span class="tepat-waktu">
+                                    Tidak terlambat
+                                </span>
+                            @endif
+                        </td>
+
+                        <td>
+                            @if($peminjaman->estimasi_denda > 0)
+                                <span class="denda">
+                                    Rp{{ number_format($peminjaman->estimasi_denda, 0, ',', '.') }}
+                                </span>
+                            @else
+                                <span class="tepat-waktu">
+                                    Rp0
+                                </span>
+                            @endif
+                        </td>
+
+                        <td>
                             <form
                                 class="form-kondisi"
                                 action="{{ route('petugas.pengembalian.proses', $peminjaman->id_pinjam) }}"
@@ -202,9 +316,10 @@
                             </form>
                         </td>
                     </tr>
+
                 @empty
                     <tr>
-                        <td colspan="5" class="empty">
+                        <td colspan="7" class="empty">
                             Belum ada pengajuan pengembalian yang menunggu.
                         </td>
                     </tr>

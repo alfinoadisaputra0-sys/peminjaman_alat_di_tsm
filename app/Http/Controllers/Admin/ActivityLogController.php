@@ -5,11 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'tanggal_awal' => 'nullable|date_format:Y-m-d',
+            'tanggal_akhir' => 'nullable|date_format:Y-m-d|after_or_equal:tanggal_awal',
+            'role' => 'nullable|in:admin,petugas,user',
+            'action' => 'nullable|string|max:50',
+            'search' => 'nullable|string|max:100',
+        ]);
+
         $query = ActivityLog::query()->latest();
 
         // Pencarian nama atau keterangan aktivitas.
@@ -32,7 +41,7 @@ class ActivityLogController extends Controller
             $query->where('action', $request->action);
         }
 
-        // Filter berdasarkan tanggal awal.
+        // Filter tanggal awal WIB.
         if ($request->filled('tanggal_awal')) {
             $query->whereDate(
                 'created_at',
@@ -41,7 +50,7 @@ class ActivityLogController extends Controller
             );
         }
 
-        // Filter berdasarkan tanggal akhir.
+        // Filter tanggal akhir WIB.
         if ($request->filled('tanggal_akhir')) {
             $query->whereDate(
                 'created_at',
@@ -50,12 +59,14 @@ class ActivityLogController extends Controller
             );
         }
 
-        // Statistik seluruh aktivitas.
+        // Statistik.
         $totalAktivitas = ActivityLog::count();
+
+        $hariIni = Carbon::now('Asia/Jakarta')->toDateString();
 
         $aktivitasHariIni = ActivityLog::whereDate(
             'created_at',
-            today()
+            $hariIni
         )->count();
 
         $totalAdmin = ActivityLog::where(
@@ -73,8 +84,10 @@ class ActivityLogController extends Controller
             'user'
         )->count();
 
-        // Ambil data aktivitas dengan pagination.
-        $aktivitas = $query->paginate(15)->withQueryString();
+        // Pagination.
+        $aktivitas = $query
+            ->paginate(15)
+            ->withQueryString();
 
         return view('admin.aktivitas.index', compact(
             'aktivitas',

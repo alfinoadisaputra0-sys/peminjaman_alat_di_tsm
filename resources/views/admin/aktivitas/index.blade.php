@@ -334,11 +334,11 @@
 
                             <td>
                                 <div>
-                                    {{ $log->created_at->format('d-m-Y') }}
+                                    {{ $log->created_at->timezone('Asia/Jakarta')->format('d-m-Y') }}
                                 </div>
 
                                 <small class="text-muted">
-                                    {{ $log->created_at->format('H:i:s') }}
+                                    {{ $log->created_at->timezone('Asia/Jakarta')->format('H:i:s') }} WIB
                                 </small>
                             </td>
 
